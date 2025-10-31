@@ -289,9 +289,9 @@
             checks={checks}
             gitInfo={gitInfo}
           />
-    </div>
+    </div>    
       );
-    }
+}
 
     // Load game in iframe
     async function loadGame() {
@@ -312,15 +312,25 @@
             <meta charset="UTF-8">
             <style>
               body { margin: 0; padding: 0; overflow: hidden; background: #000; }
+              #game-container { width: 800px; height: 600px; }
             </style>
             <script>
               window.initGame = function() {
                 console.log('Phaser loaded, initializing game...');
                 try {
-                  ${gameCode}
-                  console.log('Game initialized successfully');
+                  // Wait for DOM to be ready
+                  if (document.body) {
+                    ${gameCode}
+                    console.log('Game initialized successfully');
+                  } else {
+                    // Try again if body not ready
+                    setTimeout(window.initGame, 10);
+                  }
                 } catch (error) {
                   console.error('Game initialization error:', error);
+                  if (document.body) {
+                    document.body.innerHTML = '<div style="color: red; padding: 20px;">Game Error: ' + error.message + '</div>';
+                  }
                 }
               };
             <\/script>
