@@ -3,27 +3,6 @@
 
 const Phaser = window.Phaser // Declare the Phaser variable
 
-// Ensure a container with id 'game-container' exists (the iframe may not include it)
-(function ensureGameContainer() {
-  try {
-    let container = document.getElementById('game-container')
-    if (!container) {
-      container = document.createElement('div')
-      container.id = 'game-container'
-      container.style.width = '800px'
-      container.style.height = '600px'
-      container.style.margin = '0'
-      container.style.padding = '0'
-      container.style.position = 'relative'
-      // background will be handled by Phaser config
-      document.body.appendChild(container)
-    }
-  } catch (e) {
-    // If document isn't available yet, ignore — Phaser will create the canvas later
-    console.warn('ensureGameContainer:', e && e.message)
-  }
-})()
-
 class MenuScene extends Phaser.Scene {
   constructor() {
     super({ key: "MenuScene" })
@@ -902,7 +881,7 @@ const config = {
     dom: {
         createContainer: true
     },
-  scene: [MenuScene, GameScene, GameOverScene],
+    scene: [MenuScene, GameScene],
     physics: {
         default: 'arcade',
         arcade: {
