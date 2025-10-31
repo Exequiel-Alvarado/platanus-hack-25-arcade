@@ -1,6 +1,4 @@
 {
-  "name": "Bubble Shooter",
-  "description": "Un adictivo juego de disparar burbujas. Conecta 3 o más burbujas del mismo color para hacerlas explotar. Usa las flechas para mover y ESPACIO para disparar. ¡Evita que las burbujas lleguen al fondo!",
-  "author": "Exequiel Alvarado",
-  "version": "1.0.0"
+  "game_name": "<Exequiel Alvarado Bubble shooter >",
+  "description": "<juego estilo Puzzle Bobble. Apunta y dispara burbujas del mismo color para hacerlas explotar. Gráficos 100% generados con Phaser Graphics. ← → para apuntar, Space para disparar>"
 }
