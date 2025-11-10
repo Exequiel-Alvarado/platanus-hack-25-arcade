@@ -897,6 +897,9 @@ class GameScene extends Phaser.Scene {
     this.bubbleGrid = [];
     this.gameOver = false;
 
+    // Start background music
+    this.startBackgroundMusic();
+
     // Enhanced background
     const bgGraphics = this.add.graphics()
     bgGraphics.fillGradientStyle(0x0f0f23, 0x1a1a2e, 0x16213e, 0x0f0f23, 1)
@@ -2026,9 +2029,160 @@ class GameScene extends Phaser.Scene {
     }
   }
 
+  startBackgroundMusic() {
+    if (!this.audioContext) return
+
+    // Create background music using Web Audio API
+    this.musicOscillators = []
+    this.musicGainNodes = []
+
+    // Main melody - upbeat bubble pop theme
+    const melodyNotes = [
+      { freq: 523.25, duration: 0.3, delay: 0 },    // C5
+      { freq: 659.25, duration: 0.3, delay: 0.3 },  // E5
+      { freq: 783.99, duration: 0.3, delay: 0.6 },  // G5
+      { freq: 1046.50, duration: 0.6, delay: 0.9 }, // C6
+      { freq: 783.99, duration: 0.3, delay: 1.5 },  // G5
+      { freq: 659.25, duration: 0.3, delay: 1.8 },  // E5
+      { freq: 523.25, duration: 0.6, delay: 2.1 },  // C5
+      { freq: 440.00, duration: 0.3, delay: 2.7 },  // A4
+      { freq: 523.25, duration: 0.3, delay: 3.0 },  // C5
+      { freq: 587.33, duration: 0.3, delay: 3.3 },  // D5
+      { freq: 659.25, duration: 0.6, delay: 3.6 },  // E5
+    ]
+
+    // Bass line for rhythm
+    const bassNotes = [
+      { freq: 130.81, duration: 0.4, delay: 0 },    // C3
+      { freq: 164.81, duration: 0.4, delay: 0.4 },  // E3
+      { freq: 196.00, duration: 0.4, delay: 0.8 },  // G3
+      { freq: 261.63, duration: 0.8, delay: 1.2 },  // C4
+      { freq: 196.00, duration: 0.4, delay: 2.0 },  // G3
+      { freq: 164.81, duration: 0.4, delay: 2.4 },  // E3
+      { freq: 130.81, duration: 0.8, delay: 2.8 },  // C3
+    ]
+
+    // Play melody
+    melodyNotes.forEach(note => {
+      this.time.delayedCall(note.delay, () => {
+        this.playMusicNote(note.freq, note.duration, 0.1)
+      })
+    })
+
+    // Play bass line
+    bassNotes.forEach(note => {
+      this.time.delayedCall(note.delay, () => {
+        this.playMusicNote(note.freq, note.duration, 0.08)
+      })
+    })
+
+    // Repeat the melody every 4 seconds
+    this.musicLoop = this.time.addEvent({
+      delay: 4000,
+      callback: () => {
+        if (!this.gameOver) {
+          melodyNotes.forEach(note => {
+            this.time.delayedCall(note.delay, () => {
+              this.playMusicNote(note.freq, note.duration, 0.08)
+            })
+          })
+          bassNotes.forEach(note => {
+            this.time.delayedCall(note.delay, () => {
+              this.playMusicNote(note.freq, note.duration, 0.06)
+            })
+          })
+        }
+      },
+      loop: true
+    })
+
+    // Add some ambient bubbles popping sounds occasionally
+    this.ambientSounds = this.time.addEvent({
+      delay: Phaser.Math.Between(2000, 5000),
+      callback: () => {
+        if (!this.gameOver) {
+          this.playAmbientBubbleSound()
+        }
+      },
+      loop: true
+    })
+  }
+
+  playMusicNote(frequency, duration, volume = 0.1) {
+    if (!this.audioContext) return
+
+    const oscillator = this.audioContext.createOscillator()
+    const gainNode = this.audioContext.createGain()
+
+    oscillator.connect(gainNode)
+    gainNode.connect(this.audioContext.destination)
+
+    oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime)
+
+    // Add some vibrato for richness
+    const vibrato = this.audioContext.createOscillator()
+    const vibratoGain = this.audioContext.createGain()
+    vibrato.frequency.setValueAtTime(5, this.audioContext.currentTime)
+    vibratoGain.gain.setValueAtTime(10, this.audioContext.currentTime)
+    vibrato.connect(vibratoGain)
+    vibratoGain.connect(oscillator.frequency)
+
+    gainNode.gain.setValueAtTime(volume, this.audioContext.currentTime)
+    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration)
+
+    oscillator.start()
+    vibrato.start()
+    oscillator.stop(this.audioContext.currentTime + duration)
+    vibrato.stop(this.audioContext.currentTime + duration)
+
+    this.musicOscillators.push(oscillator)
+    this.musicGainNodes.push(gainNode)
+  }
+
+  playAmbientBubbleSound() {
+    if (!this.audioContext) return
+
+    // Random bubble pop sound for atmosphere
+    const frequencies = [400, 500, 600, 700, 800]
+    const freq = Phaser.Utils.Array.GetRandom(frequencies)
+
+    const oscillator = this.audioContext.createOscillator()
+    const gainNode = this.audioContext.createGain()
+
+    oscillator.connect(gainNode)
+    gainNode.connect(this.audioContext.destination)
+
+    oscillator.frequency.setValueAtTime(freq, this.audioContext.currentTime)
+    oscillator.frequency.exponentialRampToValueAtTime(freq * 0.3, this.audioContext.currentTime + 0.1)
+
+    gainNode.gain.setValueAtTime(0.02, this.audioContext.currentTime)
+    gainNode.gain.exponentialRampToValueAtTime(0.001, this.audioContext.currentTime + 0.1)
+
+    oscillator.start()
+    oscillator.stop(this.audioContext.currentTime + 0.1)
+  }
+
+  stopBackgroundMusic() {
+    if (this.musicLoop) {
+      this.musicLoop.destroy()
+    }
+    if (this.ambientSounds) {
+      this.ambientSounds.destroy()
+    }
+    // Stop any playing oscillators
+    if (this.musicOscillators) {
+      this.musicOscillators.forEach(osc => {
+        try { osc.stop() } catch (e) {}
+      })
+    }
+  }
+
   endGame() {
     // Marcar gameOver y bloquear controles
     this.gameOver = true
+
+    // Stop background music
+    this.stopBackgroundMusic()
 
     // Animar todas las burbujas cayendo hasta la línea roja
     this.dropAllBubblesToRedLine()
