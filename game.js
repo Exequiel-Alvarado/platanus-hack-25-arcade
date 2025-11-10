@@ -7,10 +7,8 @@ const Phaser = window.Phaser // Declare the Phaser variable
 const ARCADE_CONTROLS = {
   P1U: ['KeyW', 'ArrowUp'], // Aim up
   P1D: ['KeyS', 'ArrowDown'], // Aim down
-  P1L: ['KeyA', 'ArrowLeft', 'KeyQ'], // Move cannon left (added Q)
-  P1R: ['KeyD', 'ArrowRight', 'KeyE'], // Move cannon right (added E)
-  P1DL: [],
-  P1DR: [],
+  P1L: ['KeyQ'], // Move cannon left (only Q)
+  P1R: ['KeyE'], // Move cannon right (only E)
   P1A: ['KeyU', 'Space'], // Shoot
   P1B: ['KeyL'], // Aim right
   P1C: ['KeyO'],
@@ -20,8 +18,8 @@ const ARCADE_CONTROLS = {
   START1: ['KeyR'],
   P2U: ['ArrowUp', 'KeyW'], // Aim up
   P2D: ['ArrowDown', 'KeyS'], // Aim down
-  P2L: ['ArrowLeft', 'KeyA', 'KeyQ'], // Move cannon left (added Q)
-  P2R: ['ArrowRight', 'KeyD', 'KeyE'], // Move cannon right (added E)
+  P2L: ['KeyQ'], // Move cannon left (only Q)
+  P2R: ['KeyE'], // Move cannon right (only E)
   P2DL: [],
   P2DR: [],
   P2A: ['KeyR', 'Space'], // Shoot
@@ -31,6 +29,27 @@ const ARCADE_CONTROLS = {
   P2Y: ['KeyG'],
   P2Z: ['KeyH'],
   START2: ['KeyP']
+}
+
+// Alternative keyboard controls for easier testing
+const ALTERNATIVE_CONTROLS = {
+  // Player 1
+  P1_LEFT: ['KeyA'], // Move left
+  P1_RIGHT: ['KeyD'], // Move right
+  P1_AIM_LEFT: ['KeyQ'], // Aim left
+  P1_AIM_RIGHT: ['KeyE'], // Aim right
+  P1_AIM_UP: ['KeyW'], // Aim up
+  P1_AIM_DOWN: ['KeyS'], // Aim down
+  P1_SHOOT: ['Space'], // Shoot
+
+  // Player 2
+  P2_LEFT: ['KeyJ'], // Move left
+  P2_RIGHT: ['KeyL'], // Move right
+  P2_AIM_LEFT: ['KeyU'], // Aim left
+  P2_AIM_RIGHT: ['KeyO'], // Aim right
+  P2_AIM_UP: ['KeyI'], // Aim up
+  P2_AIM_DOWN: ['KeyK'], // Aim down
+  P2_SHOOT: ['Enter'], // Shoot
 }
 
 class MenuScene extends Phaser.Scene {
@@ -122,14 +141,14 @@ class MenuScene extends Phaser.Scene {
     // Instructions with better styling
     const instructionsBg = this.add.graphics()
     instructionsBg.fillStyle(0x000000, 0.7)
-    instructionsBg.fillRoundedRect(250, 270, 300, 80, 10)
+    instructionsBg.fillRoundedRect(200, 270, 400, 120, 10)
 
     const instructions = this.add.text(
       400,
       290,
-      "🎯 Conecta 3+ burbujas del mismo color",
+      "🎯 Conecta 3+ burbujas del mismo color\n\n⚠️ Después de 1 minuto las burbujas caen automáticamente",
       {
-        fontSize: "18px",
+        fontSize: "16px",
         fill: "#ffffff",
         fontFamily: "Arial",
         fontStyle: "bold",
@@ -140,20 +159,18 @@ class MenuScene extends Phaser.Scene {
 
     const controls = this.add.text(
       400,
-      320,
-      "🎮 CONTROLES COMPLETOS:\n\n" +
+      340,
+      "🎮 CONTROLES FÁCILES:\n\n" +
       "🎯 Jugador 1:\n" +
-      "  📍 Mover cañón: Q/A/← | E/D/→\n" +
-      "  🎯 Apuntar ↑↓: W/↑ | S/↓\n" +
-      "  🎯 Apuntar ←→: J | L\n" +
-      "  💥 Disparar: U/ESPACIO\n\n" +
+      "  📍 Mover cañón: A | D\n" +
+      "  🎯 Apuntar: Q W E S\n" +
+      "  💥 Disparar: ESPACIO\n\n" +
       "🎯 Jugador 2:\n" +
-      "  📍 Mover cañón: Q/A/← | E/D/→\n" +
-      "  🎯 Apuntar ↑↓: W/↑ | S/↓\n" +
-      "  🎯 Apuntar ←→: F | H\n" +
-      "  💥 Disparar: R/ESPACIO",
+      "  📍 Mover cañón: J | L\n" +
+      "  🎯 Apuntar: U I O K\n" +
+      "  💥 Disparar: ENTER",
       {
-        fontSize: "11px",
+        fontSize: "12px",
         fill: "#ffe66d",
         fontFamily: "Arial",
         align: "center",
@@ -682,6 +699,7 @@ class GameScene extends Phaser.Scene {
   init(data) {
     this.numPlayers = data.numPlayers || 1;
     this.currentPlayer = 0; // 0 for player 1, 1 for player 2
+    this.simultaneousMode = this.numPlayers === 2; // Both players play simultaneously in 2-player mode
     this.scores = [0, 0];
     this.gameOver = false;
     this.shooters = [];
@@ -692,6 +710,7 @@ class GameScene extends Phaser.Scene {
     this.layerDropInterval = 60; // Base interval between layer drops
     this.maxLayers = 5; // Maximum number of layers to drop
     this.layersDropped = 0; // Number of layers already dropped
+    this.gravityFallActive = false; // Flag for continuous falling after 1 minute
   }
 
   preload() {
@@ -771,6 +790,7 @@ class GameScene extends Phaser.Scene {
       shooter.y = this.SHOOTER_Y
       shooter.playerIndex = i
       shooter.aimAngle = 0 // Angle for aiming (0 = straight up, positive = right, negative = left)
+      shooter.aimVerticalAngle = 0 // Vertical angle for aiming
       this.shooters.push(shooter)
       this.drawShooter(shooter)
 
@@ -781,7 +801,11 @@ class GameScene extends Phaser.Scene {
     // Initialize aiming preview
     this.aimPreview = this.add.graphics()
     this.aimPreview.setDepth(5)
-    this.updateAimPreview()
+
+    // Show initial trajectory preview
+    this.time.delayedCall(500, () => {
+      this.updateAimPreview()
+    })
 
     // Initialize bubble grid
     this.initializeBubbleGrid()
@@ -829,7 +853,8 @@ class GameScene extends Phaser.Scene {
     playerIndicatorBg.fillStyle(0x4ecdc4, 0.9)
     playerIndicatorBg.fillRoundedRect(350, 10, 100, 30, 8)
 
-    this.currentPlayerText = this.add.text(400, 25, `🎮 Jugador ${this.currentPlayer + 1}`, {
+    const playerText = this.simultaneousMode ? "🎮 MODO SIMULTÁNEO" : `🎮 Jugador ${this.currentPlayer + 1}`
+    this.currentPlayerText = this.add.text(400, 25, playerText, {
       fontSize: "16px",
       fill: "#1a1a2e",
       fontFamily: "Arial",
@@ -876,53 +901,175 @@ class GameScene extends Phaser.Scene {
 
     this.displayHighScores()
 
-    // Controls using arcade mapping with aiming system
+    // Initialize shotThisFrame flag
+    this.shotThisFrame = false
+
+    // Controls using arcade mapping with aiming system and alternative controls
     const setupArcadeControls = () => {
       // Helper function to check if any key in the mapping is pressed
-      const isKeyPressed = (arcadeKey) => {
-        return ARCADE_CONTROLS[arcadeKey].some(key => this.input.keyboard.checkDown(this.input.keyboard.addKey(key)))
+      const isKeyPressed = (keyArray) => {
+        return keyArray.some(key => this.input.keyboard.checkDown(this.input.keyboard.addKey(key)))
       }
 
-      const currentShooter = this.shooters[this.currentPlayer]
-      const currentBubble = this.currentBubbles[this.currentPlayer]
+      // Use alternative controls for easier testing
+      if (this.simultaneousMode) {
+        // Simultaneous mode: both players can control at the same time
+        for (let playerIndex = 0; playerIndex < this.numPlayers; playerIndex++) {
+          const shooter = this.shooters[playerIndex]
+          const bubble = this.currentBubbles[playerIndex]
 
-      // Movement left (only shooter, not bubble)
-      if (isKeyPressed(this.currentPlayer === 0 ? 'P1L' : 'P2L') && !this.gameOver && !this.nameInputActive && currentShooter.x > 50) {
-        currentShooter.x -= 20
-        this.updateAimPreview()
+          if (playerIndex === 0) {
+            // Player 1 - Alternative controls (A/D, Q/E, W/S, Space)
+            // Movement left - A key
+            if (isKeyPressed(ALTERNATIVE_CONTROLS.P1_LEFT) && !this.gameOver && !this.nameInputActive && shooter.x > 50) {
+              shooter.x -= 20
+              if (bubble) bubble.x = shooter.x
+              this.updateAimPreview()
+            }
+
+            // Movement right - D key
+            if (isKeyPressed(ALTERNATIVE_CONTROLS.P1_RIGHT) && !this.gameOver && !this.nameInputActive && shooter.x < 750) {
+              shooter.x += 20
+              if (bubble) bubble.x = shooter.x
+              this.updateAimPreview()
+            }
+
+            // Aim left - Q key
+            if (isKeyPressed(ALTERNATIVE_CONTROLS.P1_AIM_LEFT) && !this.gameOver && !this.nameInputActive && bubble && !bubble.launched) {
+              this.adjustAim(-5, playerIndex)
+            }
+
+            // Aim right - E key
+            if (isKeyPressed(ALTERNATIVE_CONTROLS.P1_AIM_RIGHT) && !this.gameOver && !this.nameInputActive && bubble && !bubble.launched) {
+              this.adjustAim(5, playerIndex)
+            }
+
+            // Aim up - W key
+            if (isKeyPressed(ALTERNATIVE_CONTROLS.P1_AIM_UP) && !this.gameOver && !this.nameInputActive && bubble && !bubble.launched) {
+              this.adjustAimVertical(-5, playerIndex)
+            }
+
+            // Aim down - S key
+            if (isKeyPressed(ALTERNATIVE_CONTROLS.P1_AIM_DOWN) && !this.gameOver && !this.nameInputActive && bubble && !bubble.launched) {
+              this.adjustAimVertical(5, playerIndex)
+            }
+
+            // Shoot - Space key
+            if (isKeyPressed(ALTERNATIVE_CONTROLS.P1_SHOOT) && !this.gameOver && !this.nameInputActive && bubble && !bubble.launched) {
+              if (!this.shotThisFrame) {
+                this.shootBubble(playerIndex)
+                this.shotThisFrame = true
+              }
+            }
+          }
+
+          if (playerIndex === 1) {
+            // Player 2 - Alternative controls (J/L, U/O, I/K, Enter)
+            // Movement left - J key
+            if (isKeyPressed(ALTERNATIVE_CONTROLS.P2_LEFT) && !this.gameOver && !this.nameInputActive && shooter.x > 50) {
+              shooter.x -= 20
+              if (bubble) bubble.x = shooter.x
+              this.updateAimPreview()
+            }
+
+            // Movement right - L key
+            if (isKeyPressed(ALTERNATIVE_CONTROLS.P2_RIGHT) && !this.gameOver && !this.nameInputActive && shooter.x < 750) {
+              shooter.x += 20
+              if (bubble) bubble.x = shooter.x
+              this.updateAimPreview()
+            }
+
+            // Aim left - U key
+            if (isKeyPressed(ALTERNATIVE_CONTROLS.P2_AIM_LEFT) && !this.gameOver && !this.nameInputActive && bubble && !bubble.launched) {
+              this.adjustAim(-5, playerIndex)
+            }
+
+            // Aim right - O key
+            if (isKeyPressed(ALTERNATIVE_CONTROLS.P2_AIM_RIGHT) && !this.gameOver && !this.nameInputActive && bubble && !bubble.launched) {
+              this.adjustAim(5, playerIndex)
+            }
+
+            // Aim up - I key
+            if (isKeyPressed(ALTERNATIVE_CONTROLS.P2_AIM_UP) && !this.gameOver && !this.nameInputActive && bubble && !bubble.launched) {
+              this.adjustAimVertical(-5, playerIndex)
+            }
+
+            // Aim down - K key
+            if (isKeyPressed(ALTERNATIVE_CONTROLS.P2_AIM_DOWN) && !this.gameOver && !this.nameInputActive && bubble && !bubble.launched) {
+              this.adjustAimVertical(5, playerIndex)
+            }
+
+            // Shoot - Enter key
+            if (isKeyPressed(ALTERNATIVE_CONTROLS.P2_SHOOT) && !this.gameOver && !this.nameInputActive && bubble && !bubble.launched) {
+              if (!this.shotThisFrame) {
+                this.shootBubble(playerIndex)
+                this.shotThisFrame = true
+              }
+            }
+          }
+        }
+      } else {
+        // Turn-based mode (single player or turn-based multiplayer)
+        const currentShooter = this.shooters[this.currentPlayer]
+        const currentBubble = this.currentBubbles[this.currentPlayer]
+
+        // Movement left - A key
+        if (isKeyPressed(ALTERNATIVE_CONTROLS.P1_LEFT) && !this.gameOver && !this.nameInputActive && currentShooter.x > 50) {
+          currentShooter.x -= 20
+          if (currentBubble) {
+            currentBubble.x = currentShooter.x
+          }
+          this.updateAimPreview()
+        }
+
+        // Movement right - D key
+        if (isKeyPressed(ALTERNATIVE_CONTROLS.P1_RIGHT) && !this.gameOver && !this.nameInputActive && currentShooter.x < 750) {
+          currentShooter.x += 20
+          if (currentBubble) {
+            currentBubble.x = currentShooter.x
+          }
+          this.updateAimPreview()
+        }
+
+        // Aim left - Q key
+        if (isKeyPressed(ALTERNATIVE_CONTROLS.P1_AIM_LEFT) && !this.gameOver && !this.nameInputActive && currentBubble && !currentBubble.launched) {
+          this.adjustAim(-5)
+        }
+
+        // Aim right - E key
+        if (isKeyPressed(ALTERNATIVE_CONTROLS.P1_AIM_RIGHT) && !this.gameOver && !this.nameInputActive && currentBubble && !currentBubble.launched) {
+          this.adjustAim(5)
+        }
+
+        // Aim up - W key
+        if (isKeyPressed(ALTERNATIVE_CONTROLS.P1_AIM_UP) && !this.gameOver && !this.nameInputActive && currentBubble && !currentBubble.launched) {
+          this.adjustAimVertical(-5)
+        }
+
+        // Aim down - S key
+        if (isKeyPressed(ALTERNATIVE_CONTROLS.P1_AIM_DOWN) && !this.gameOver && !this.nameInputActive && currentBubble && !currentBubble.launched) {
+          this.adjustAimVertical(5)
+        }
+
+        // Shoot - Space key
+        if (isKeyPressed(ALTERNATIVE_CONTROLS.P1_SHOOT) && !this.gameOver && !this.nameInputActive && currentBubble && !currentBubble.launched) {
+          if (!this.shotThisFrame) {
+            this.shootBubble(this.currentPlayer)
+            this.shotThisFrame = true
+          }
+        } else {
+          this.shotThisFrame = false
+        }
       }
 
-      // Movement right (only shooter, not bubble)
-      if (isKeyPressed(this.currentPlayer === 0 ? 'P1R' : 'P2R') && !this.gameOver && !this.nameInputActive && currentShooter.x < 750) {
-        currentShooter.x += 20
-        this.updateAimPreview()
-      }
-
-      // Aim left (rotate angle left)
-      if (isKeyPressed(this.currentPlayer === 0 ? 'P1X' : 'P2X') && !this.gameOver && !this.nameInputActive && currentBubble && !currentBubble.launched) {
-        this.adjustAim(-5)
-      }
-
-      // Aim right (rotate angle right)
-      if (isKeyPressed(this.currentPlayer === 0 ? 'P1B' : 'P2B') && !this.gameOver && !this.nameInputActive && currentBubble && !currentBubble.launched) {
-        this.adjustAim(5)
-      }
-
-      // Aim up (rotate angle up)
-      if (isKeyPressed(this.currentPlayer === 0 ? 'P1U' : 'P2U') && !this.gameOver && !this.nameInputActive && currentBubble && !currentBubble.launched) {
-        this.adjustAimVertical(-5)
-      }
-
-      // Aim down (rotate angle down)
-      if (isKeyPressed(this.currentPlayer === 0 ? 'P1D' : 'P2D') && !this.gameOver && !this.nameInputActive && currentBubble && !currentBubble.launched) {
-        this.adjustAimVertical(5)
-      }
-
-      // Shoot
-      if (isKeyPressed(this.currentPlayer === 0 ? 'P1A' : 'P2A') && !this.gameOver && !this.nameInputActive && currentBubble && !currentBubble.launched) {
-        this.shootBubble(this.currentPlayer)
+      // Reset shot flag if no shoot keys are pressed
+      if (!isKeyPressed(ALTERNATIVE_CONTROLS.P1_SHOOT) && !isKeyPressed(ALTERNATIVE_CONTROLS.P2_SHOOT)) {
+        this.shotThisFrame = false
       }
     }
+
+    // Initialize keyboard keys at the beginning of create()
+    this.input.keyboard.addKeys('A,D,Q,E,W,S,SPACE,J,L,U,O,I,K,ENTER')
 
     // Update controls in update loop
     this.updateControls = setupArcadeControls
@@ -952,6 +1099,17 @@ class GameScene extends Phaser.Scene {
       if (this.layersDropped > 1) {
         this.layerDropInterval = Math.max(30, this.layerDropInterval - 5)
       }
+    }
+
+    // Activate gravity fall after 1 minute (60 seconds)
+    if (!this.gravityFallActive && this.gameTime >= 60) {
+      this.gravityFallActive = true
+      this.startGravityFall()
+    }
+
+    // Update gravity fall if active
+    if (this.gravityFallActive) {
+      this.updateGravityFall()
     }
 
     // Update controls
@@ -1037,11 +1195,25 @@ class GameScene extends Phaser.Scene {
     bubble.playerIndex = playerIndex
     this.currentBubbles[playerIndex] = bubble
 
-    // Add glow effect for current bubble
+    // Add glow effect for current bubble (different for each player in simultaneous mode)
     if (this.currentBubbleGlow) this.currentBubbleGlow.destroy()
     this.currentBubbleGlow = this.add.graphics()
-    this.currentBubbleGlow.lineStyle(1, color, 0.4)
-    this.currentBubbleGlow.strokeCircle(bubble.x, bubble.y, this.BUBBLE_SIZE / 2 + 3)
+
+    if (this.simultaneousMode) {
+      // In simultaneous mode, show glow for both current bubbles
+      for (let i = 0; i < this.numPlayers; i++) {
+        const currentBubble = this.currentBubbles[i]
+        if (currentBubble && !currentBubble.launched) {
+          const glowColor = i === 0 ? 0x4ecdc4 : 0xff6b6b // Different colors for each player
+          this.currentBubbleGlow.lineStyle(2, glowColor, 0.6)
+          this.currentBubbleGlow.strokeCircle(currentBubble.x, currentBubble.y, this.BUBBLE_SIZE / 2 + 4)
+        }
+      }
+    } else {
+      // Single player mode - original behavior
+      this.currentBubbleGlow.lineStyle(1, color, 0.4)
+      this.currentBubbleGlow.strokeCircle(bubble.x, bubble.y, this.BUBBLE_SIZE / 2 + 3)
+    }
     this.currentBubbleGlow.setDepth(-1)
   }
 
@@ -1079,8 +1251,10 @@ class GameScene extends Phaser.Scene {
         this.currentBubbles[playerIndex] = null
         this.time.delayedCall(200, () => {
           this.createNewBubble(playerIndex)
-          // Switch to next player
-          this.switchPlayer()
+          // Only switch player if not in simultaneous mode
+          if (!this.simultaneousMode) {
+            this.switchPlayer()
+          }
         })
         return
       }
@@ -1107,7 +1281,10 @@ class GameScene extends Phaser.Scene {
       this.angleDisplay = null
     }
 
-    this.updateAimPreview()
+    // Show trajectory preview immediately for current player
+    this.time.delayedCall(300, () => {
+      this.updateAimPreview()
+    })
   }
 
   dropNewLayer() {
@@ -1210,14 +1387,14 @@ class GameScene extends Phaser.Scene {
     oscillator.stop(this.audioContext.currentTime + 0.8)
   }
 
-  adjustAim(angleChange) {
-    const shooter = this.shooters[this.currentPlayer]
+  adjustAim(angleChange, playerIndex = this.currentPlayer) {
+    const shooter = this.shooters[playerIndex]
     shooter.aimAngle = Math.max(-45, Math.min(45, shooter.aimAngle + angleChange))
     this.updateAimPreview()
   }
 
-  adjustAimVertical(angleChange) {
-    const shooter = this.shooters[this.currentPlayer]
+  adjustAimVertical(angleChange, playerIndex = this.currentPlayer) {
+    const shooter = this.shooters[playerIndex]
     shooter.aimVerticalAngle = (shooter.aimVerticalAngle || 0) + angleChange
     shooter.aimVerticalAngle = Math.max(-30, Math.min(30, shooter.aimVerticalAngle))
     this.updateAimPreview()
@@ -1226,137 +1403,150 @@ class GameScene extends Phaser.Scene {
   updateAimPreview() {
     this.aimPreview.clear()
 
-    const shooter = this.shooters[this.currentPlayer]
-    const bubble = this.currentBubbles[this.currentPlayer]
-    if (!bubble || bubble.launched) return
+    // In simultaneous mode, show preview for both players
+    const playersToShow = this.simultaneousMode ? [0, 1] : [this.currentPlayer]
 
-    const startX = shooter.x
-    const startY = shooter.y - 20
+    for (const playerIndex of playersToShow) {
+      const shooter = this.shooters[playerIndex]
+      const bubble = this.currentBubbles[playerIndex]
+      if (!bubble || bubble.launched) continue
 
-    // Calculate trajectory with both horizontal and vertical angles
-    const horizontalAngle = shooter.aimAngle * Math.PI / 180
-    const verticalAngle = (shooter.aimVerticalAngle || 0) * Math.PI / 180
-    const speed = 8
+      const startX = bubble.x
+      const startY = bubble.y
 
-    // Combine angles for 2D trajectory
-    const totalAngle = Math.atan2(Math.sin(horizontalAngle), -Math.cos(verticalAngle))
-    let velX = Math.sin(totalAngle) * speed
-    let velY = -Math.cos(totalAngle) * speed
+      // Calculate trajectory with both horizontal and vertical angles
+      const horizontalAngle = shooter.aimAngle * Math.PI / 180
+      const verticalAngle = (shooter.aimVerticalAngle || 0) * Math.PI / 180
+      const speed = 8
 
-    // Enhanced trajectory preview with dotted line and glow effect
-    let currentX = startX
-    let currentY = startY
+      // Combine angles for 2D trajectory
+      const totalAngle = Math.atan2(Math.sin(horizontalAngle), -Math.cos(verticalAngle))
+      let velX = Math.sin(totalAngle) * speed
+      let velY = -Math.cos(totalAngle) * speed
 
-    // Draw dotted trajectory line with glow
-    this.aimPreview.lineStyle(1, bubble.color, 0.3)
-    this.aimPreview.moveTo(startX, startY)
+      // Enhanced trajectory preview with dotted line and glow effect
+      let currentX = startX
+      let currentY = startY
 
-    for (let i = 0; i < 80; i++) {
-      const prevX = currentX
-      const prevY = currentY
+      // Draw dotted trajectory line with glow
+      this.aimPreview.lineStyle(3, bubble.color, 0.8)
+      this.aimPreview.moveTo(startX, startY)
 
-      currentX += velX * 0.6 // Smaller steps for smoother trajectory
-      currentY += velY * 0.6
+      for (let i = 0; i < 80; i++) {
+        const prevX = currentX
+        const prevY = currentY
 
-      // Bounce prediction
-      if (currentX <= 40 || currentX >= 760) {
-        velX *= -1
-        // Enhanced bounce indicator with glow
-        this.aimPreview.fillStyle(bubble.color, 0.9)
-        this.aimPreview.fillCircle(currentX, currentY, 8)
-        this.aimPreview.lineStyle(3, 0xffffff, 1)
-        this.aimPreview.strokeCircle(currentX, currentY, 8)
-        this.aimPreview.fillStyle(bubble.color, 0.5)
-        this.aimPreview.fillCircle(currentX, currentY, 4)
+        currentX += velX * 0.6 // Smaller steps for smoother trajectory
+        currentY += velY * 0.6
 
-        // Add ripple effect
-        this.aimPreview.lineStyle(1, bubble.color, 0.6)
-        this.aimPreview.strokeCircle(currentX, currentY, 12)
+        // Bounce prediction
+        if (currentX <= 40 || currentX >= 760) {
+          velX *= -1
+          // Enhanced bounce indicator with glow
+          this.aimPreview.fillStyle(bubble.color, 0.9)
+          this.aimPreview.fillCircle(currentX, currentY, 8)
+          this.aimPreview.lineStyle(3, 0xffffff, 1)
+          this.aimPreview.strokeCircle(currentX, currentY, 8)
+          this.aimPreview.fillStyle(bubble.color, 0.5)
+          this.aimPreview.fillCircle(currentX, currentY, 4)
+
+          // Add ripple effect
+          this.aimPreview.lineStyle(1, bubble.color, 0.6)
+          this.aimPreview.strokeCircle(currentX, currentY, 12)
+        }
+
+        if (currentY <= 40) {
+          // Hit top wall - could add ceiling bounce here if desired
+          break
+        }
+
+        // Draw dotted line effect - more frequent dots for better visibility
+        if (i % 3 === 0) { // Every 3rd point for dotted effect
+          this.aimPreview.fillStyle(bubble.color, 1.0)
+          this.aimPreview.fillCircle(currentX, currentY, 4)
+
+          // Add glow effect around dots
+          this.aimPreview.fillStyle(bubble.color, 0.6)
+          this.aimPreview.fillCircle(currentX, currentY, 8)
+        }
+
+        // Stop if we hit the danger zone
+        if (currentY >= 480) break
       }
 
-      if (currentY <= 40) {
-        // Hit top wall - could add ceiling bounce here if desired
-        break
+      // Enhanced aim angle indicator with animated elements
+      const indicatorLength = 40
+
+      // Calculate indicator position based on combined angles
+      const indicatorX = startX + Math.sin(totalAngle) * indicatorLength
+      const indicatorY = startY - Math.cos(totalAngle) * indicatorLength
+
+      // Main aiming line with glow
+      this.aimPreview.lineStyle(5, bubble.color, 0.9)
+      this.aimPreview.moveTo(startX, startY)
+      this.aimPreview.lineTo(indicatorX, indicatorY)
+
+      // Outer glow line
+      this.aimPreview.lineStyle(3, bubble.color, 0.5)
+      this.aimPreview.moveTo(startX, startY)
+      this.aimPreview.lineTo(indicatorX, indicatorY)
+
+      // Target indicator at the end with enhanced effects
+      this.aimPreview.fillStyle(bubble.color, 1)
+      this.aimPreview.fillCircle(indicatorX, indicatorY, 5)
+      this.aimPreview.lineStyle(3, 0xffffff, 1)
+      this.aimPreview.strokeCircle(indicatorX, indicatorY, 5)
+
+      // Pulsing effect on target
+      this.aimPreview.fillStyle(bubble.color, 0.6)
+      this.aimPreview.fillCircle(indicatorX, indicatorY, 10)
+
+      // Outer ring
+      this.aimPreview.lineStyle(2, bubble.color, 0.7)
+      this.aimPreview.strokeCircle(indicatorX, indicatorY, 12)
+
+      // Enhanced angle display with real-time feedback
+      const horizAngle = Math.abs(shooter.aimAngle)
+      const vertAngle = Math.abs(shooter.aimVerticalAngle || 0)
+      let angleText = ''
+
+      if (horizAngle > 0 && vertAngle > 0) {
+        angleText = `${shooter.aimAngle > 0 ? '→' : '←'}${horizAngle}° ${shooter.aimVerticalAngle > 0 ? '↓' : '↑'}${vertAngle}°`
+      } else if (horizAngle > 0) {
+        angleText = `${shooter.aimAngle > 0 ? '→' : '←'}${horizAngle}°`
+      } else if (vertAngle > 0) {
+        angleText = `${shooter.aimVerticalAngle > 0 ? '↓' : '↑'}${vertAngle}°`
+      } else {
+        angleText = '↑ 0°'
       }
 
-      // Draw dotted line effect - more frequent dots for better visibility
-      if (i % 2 === 0) { // Every 2nd point for dotted effect
-        this.aimPreview.fillStyle(bubble.color, 0.8)
-        this.aimPreview.fillCircle(currentX, currentY, 3)
-
-        // Add glow effect around dots
-        this.aimPreview.fillStyle(bubble.color, 0.4)
-        this.aimPreview.fillCircle(currentX, currentY, 6)
+      // Add visual feedback for angle changes
+      const totalAngleMagnitude = Math.sqrt(horizAngle * horizAngle + vertAngle * vertAngle)
+      if (totalAngleMagnitude > 0) {
+        // Add pulsing effect for non-zero angles
+        this.aimPreview.lineStyle(2, bubble.color, 0.8 + Math.sin(Date.now() * 0.01) * 0.2)
+        this.aimPreview.strokeCircle(startX, startY - 20, 25 + Math.sin(Date.now() * 0.01) * 5)
       }
 
-      // Stop if we hit the danger zone
-      if (currentY >= 480) break
+      // Angle indicator background with better positioning
+      const bgWidth = Math.max(60, angleText.length * 8)
+      this.aimPreview.fillStyle(0x000000, 0.9)
+      this.aimPreview.fillRoundedRect(startX - bgWidth/2, startY - 55, bgWidth, 22, 6)
+      this.aimPreview.lineStyle(2, bubble.color, 1)
+      this.aimPreview.strokeRoundedRect(startX - bgWidth/2, startY - 55, bgWidth, 22, 6)
+
+      // Update or create angle display text
+      if (this.angleDisplay) this.angleDisplay.destroy()
+      this.angleDisplay = this.add.text(startX, startY - 44, angleText, {
+        fontSize: '11px',
+        fill: '#ffffff',
+        fontFamily: 'Arial',
+        fontStyle: 'bold',
+        stroke: bubble.color,
+        strokeThickness: 2
+      }).setOrigin(0.5)
+      this.angleDisplay.setDepth(6)
     }
-
-    // Enhanced aim angle indicator with animated elements
-    const indicatorLength = 40
-
-    // Calculate indicator position based on combined angles
-    const indicatorX = startX + Math.sin(totalAngle) * indicatorLength
-    const indicatorY = startY - Math.cos(totalAngle) * indicatorLength
-
-    // Main aiming line with glow
-    this.aimPreview.lineStyle(5, bubble.color, 0.9)
-    this.aimPreview.moveTo(startX, startY)
-    this.aimPreview.lineTo(indicatorX, indicatorY)
-
-    // Outer glow line
-    this.aimPreview.lineStyle(3, bubble.color, 0.5)
-    this.aimPreview.moveTo(startX, startY)
-    this.aimPreview.lineTo(indicatorX, indicatorY)
-
-    // Target indicator at the end with enhanced effects
-    this.aimPreview.fillStyle(bubble.color, 1)
-    this.aimPreview.fillCircle(indicatorX, indicatorY, 5)
-    this.aimPreview.lineStyle(3, 0xffffff, 1)
-    this.aimPreview.strokeCircle(indicatorX, indicatorY, 5)
-
-    // Pulsing effect on target
-    this.aimPreview.fillStyle(bubble.color, 0.6)
-    this.aimPreview.fillCircle(indicatorX, indicatorY, 10)
-
-    // Outer ring
-    this.aimPreview.lineStyle(2, bubble.color, 0.7)
-    this.aimPreview.strokeCircle(indicatorX, indicatorY, 12)
-
-    // Angle display with both angles
-    const horizAngle = Math.abs(shooter.aimAngle)
-    const vertAngle = Math.abs(shooter.aimVerticalAngle || 0)
-    let angleText = ''
-
-    if (horizAngle > 0 && vertAngle > 0) {
-      angleText = `${shooter.aimAngle > 0 ? '→' : '←'}${horizAngle}° ${shooter.aimVerticalAngle > 0 ? '↓' : '↑'}${vertAngle}°`
-    } else if (horizAngle > 0) {
-      angleText = `${shooter.aimAngle > 0 ? '→' : '←'}${horizAngle}°`
-    } else if (vertAngle > 0) {
-      angleText = `${shooter.aimVerticalAngle > 0 ? '↓' : '↑'}${vertAngle}°`
-    } else {
-      angleText = '↑ 0°'
-    }
-
-    // Angle indicator background with better positioning
-    const bgWidth = Math.max(60, angleText.length * 8)
-    this.aimPreview.fillStyle(0x000000, 0.9)
-    this.aimPreview.fillRoundedRect(startX - bgWidth/2, startY - 55, bgWidth, 22, 6)
-    this.aimPreview.lineStyle(2, bubble.color, 1)
-    this.aimPreview.strokeRoundedRect(startX - bgWidth/2, startY - 55, bgWidth, 22, 6)
-
-    // Update or create angle display text
-    if (this.angleDisplay) this.angleDisplay.destroy()
-    this.angleDisplay = this.add.text(startX, startY - 44, angleText, {
-      fontSize: '11px',
-      fill: '#ffffff',
-      fontFamily: 'Arial',
-      fontStyle: 'bold',
-      stroke: bubble.color,
-      strokeThickness: 2
-    }).setOrigin(0.5)
-    this.angleDisplay.setDepth(6)
   }
 
   createBounceEffect(x, y, color) {
@@ -1419,7 +1609,7 @@ class GameScene extends Phaser.Scene {
         const gridBubble = this.bubbleGrid[row][col]
         if (gridBubble) {
           const dist = Phaser.Math.Distance.Between(bubble.x, bubble.y, gridBubble.x, gridBubble.y)
-          if (dist < this.BUBBLE_SIZE) {
+          if (dist <= this.BUBBLE_SIZE) {
             return true
           }
         }
@@ -1598,6 +1788,9 @@ class GameScene extends Phaser.Scene {
     // Marcar gameOver y bloquear controles
     this.gameOver = true
 
+    // Animar todas las burbujas cayendo hasta la línea roja
+    this.dropAllBubblesToRedLine()
+
     // Crear overlay semi-transparente (completo)
     if (this._overlay) this._overlay.destroy()
     this._overlay = this.add.graphics()
@@ -1757,6 +1950,76 @@ class GameScene extends Phaser.Scene {
     gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.2)
     oscillator.start()
     oscillator.stop(this.audioContext.currentTime + 0.2)
+  }
+
+  dropAllBubblesToRedLine() {
+    // Animar todas las burbujas cayendo hasta la línea roja
+    for (let row = 0; row < this.bubbleGrid.length; row++) {
+      for (let col = 0; col < this.GRID_COLS; col++) {
+        const bubble = this.bubbleGrid[row][col]
+        if (bubble) {
+          // Calcular la nueva posición Y para que llegue justo a la línea roja
+          const targetY = this.GAME_OVER_LINE_Y - this.BUBBLE_SIZE / 2
+
+          // Animar la caída con un retraso escalonado para efecto visual
+          this.tweens.add({
+            targets: bubble,
+            y: targetY,
+            duration: 1000 + (row * 50) + (col * 20), // Duración variable para efecto cascada
+            ease: 'Bounce.easeOut',
+            delay: (row * 100) + (col * 50) // Retraso escalonado
+          })
+        }
+      }
+    }
+  }
+
+  startGravityFall() {
+    // Iniciar la caída continua de burbujas después de 1 minuto
+    this.gravityFallSpeed = 0.5 // Velocidad inicial más lenta
+    this.gravityFallAcceleration = 0.02 // Aceleración más gradual
+    this.gravityFallDelay = 0 // Delay counter for gradual effect
+    this.gravityFallDelayMax = 10 // Frames between bubble movements
+  }
+
+  updateGravityFall() {
+    if (!this.gravityFallActive) return
+
+    // Incrementar delay counter
+    this.gravityFallDelay++
+
+    // Solo mover burbujas cada cierto número de frames para efecto gradual
+    if (this.gravityFallDelay >= this.gravityFallDelayMax) {
+      this.gravityFallDelay = 0
+
+      // Aumentar la velocidad gradualmente
+      this.gravityFallSpeed += this.gravityFallAcceleration
+
+      // Mover burbujas de abajo hacia arriba para efecto cascada gradual
+      let anyBubbleMoved = false
+      for (let row = this.bubbleGrid.length - 1; row >= 0; row--) {
+        for (let col = 0; col < this.GRID_COLS; col++) {
+          const bubble = this.bubbleGrid[row][col]
+          if (bubble) {
+            const newY = bubble.y + this.gravityFallSpeed
+
+            // Detener si llega a la línea roja
+            const redLineY = this.GAME_OVER_LINE_Y - this.BUBBLE_SIZE / 2
+            if (newY >= redLineY) {
+              bubble.y = redLineY
+            } else {
+              bubble.y = newY
+              anyBubbleMoved = true
+            }
+          }
+        }
+      }
+
+      // Si ninguna burbuja se movió, detener la gravedad
+      if (!anyBubbleMoved) {
+        this.gravityFallActive = false
+      }
+    }
   }
 }
 
