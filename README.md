@@ -1,8 +1,80 @@
-# 🎮 Platanus Hack 25: Arcade Challenge
+# 🎮 Bubble Pop 🫧
 
-At [Platanus Hack 25](https://hack.platan.us) we will have an arcade machine. While we could put some cool retro games on it, it is way better if it can be turned into a challenge.
+Un juego arcade para Platanus Hack 25 donde los jugadores disparan burbujas para conectar 3+ del mismo color y hacerlas explotar. ¡Elimina todas las burbujas para ganar!
 
-**Your mission:** Build the best arcade game using Phaser 3 (JS Game Lib) that will run on our physical arcade machine!
+🎯 Descripción
+Modo de 1 o 2 jugadores simultáneos
+Sistema de capas que caen cada 60 segundos
+Gravedad automática después de 1 minuto
+Sistema de ranking con Top 10 (almacenado en localStorage)
+Música y sonidos generados con Web Audio API
+Sprites procedurales dibujados en runtime (sin imágenes externas)
+
+🎯 Controles
+Jugador 1: A|D (mover cañón) • Q|W|E|S (apuntar) • ESPACIO (disparar)
+Jugador 2: J|L (mover cañón) • U|I|O|K (apuntar) • ENTER (disparar)
+📁 Estructura del Proyecto
+platanus-hack-25-arcade/
+├── game.js          # ✅ Código principal del juego (sin imports)
+├── metadata.json    # ✅ Nombre y descripción del juego
+├── index.html       # HTML con Phaser desde CDN
+├── README.md        # Este archivo
+└── bublepop.png     # Imagen de portada 800x600px
+⚙️ Características Técnicas
+Cumple con restricciones:
+✅ Sin imports: JavaScript vanilla puro
+✅ Sin URLs externas en game.js (Phaser desde CDN no cuenta)
+✅ Sin fetch/XMLHttpRequest
+✅ Sprites procedurales: Dibujados con Canvas API
+✅ Audio generado: Usando Web Audio API de Phaser
+✅ Tamaño optimizado: Código minificable
+Phaser 3 Features utilizados:
+Phaser.Game y configuración
+Physics (Arcade)
+Sprites y texturas procedurales
+Tweens para animaciones
+Keyboard input
+Groups y colisiones
+LocalStorage para persistencia
+🚀 Desarrollo
+Instalar dependencias:
+pnpm install
+Ejecutar en desarrollo:
+pnpm dev
+Verificar restricciones:
+pnpm check-restrictions
+🎨 Sprites
+Todos los sprites son generados proceduralmente en el código:
+
+Burbujas: 12 colores con gradientes y brillos
+Cañones: Triángulos con efectos de glow
+Indicadores: Trayectorias punteadas con animaciones
+🎵 Audio
+Sonidos generados con osciladores:
+Disparo: Tono ascendente (800Hz → 400Hz)
+Explosión: Tono descendente (600Hz → 200Hz)
+Alerta: Sirena alternante (800Hz ↔ 600Hz)
+
+🏆 Sistema de Ranking
+Top 10 mejores puntuaciones
+Guardado en localStorage
+📊 Mecánicas de Juego
+Capas que caen: Cada 60 segundos se agrega una nueva capa
+Gravedad automática: Después de 1 minuto las burbujas caen gradualmente
+Modo simultáneo: Ambos jugadores juegan al mismo tiempo
+🎯 Objetivo del Juego
+Conecta 3 o más burbujas del mismo color disparando burbujas. Las burbujas flotantes también caen. ¡Elimina todas las burbujas para ganar!
+
+📝 Puntuación
+10 puntos por grupo de burbujas explotadas
+5 puntos por burbujas flotantes eliminadas
+1 punto por segundo sobrevivido
+🔧 Próximos Pasos
+ Ejecutar pnpm check-restrictions para verificar tamaño
+ Optimizar código si excede 50KB
+👥 Créditos
+Juego creado para Platanus Hack 25: Arcade Challenge
+Creado por: Exequiel Alvarado
 
 ---
 

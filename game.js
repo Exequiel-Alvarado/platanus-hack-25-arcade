@@ -1053,9 +1053,7 @@ class GameScene extends Phaser.Scene {
         return keyArray.some(key => this.input.keyboard.checkDown(this.input.keyboard.addKey(key)))
       }
 
-      // Use alternative controls for easier testing
-      // Simple direct controls for testing - bypass all conditions
-      // Player 1 controls (A/D/Q/E/W/S/Space)
+      // Player 1 controls (A/D/Q/E/W/S/Space) - always available
       if (this.shooters[0]) {
         const shooter1 = this.shooters[0]
         const bubble1 = this.currentBubbles[0]
@@ -1175,6 +1173,9 @@ class GameScene extends Phaser.Scene {
 
     // Initialize keyboard keys at the beginning of create()
     this.input.keyboard.addKeys('A,D,Q,E,W,S,SPACE,J,L,U,O,I,K,ENTER,ONE,TWO')
+
+    // Enable keyboard input globally
+    this.input.keyboard.enabled = true
 
     // Update controls in update loop
     this.updateControls = setupArcadeControls
