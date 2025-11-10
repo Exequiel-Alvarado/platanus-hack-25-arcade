@@ -134,22 +134,33 @@ class MenuScene extends Phaser.Scene {
       })
     }
 
-    // Enhanced title with multiple effects
-    const title = this.add.text(400, 150, "BUBBLE POP", {
-      fontSize: "80px",
+    // Creator name - moved to top left corner
+    const creatorName = this.add.text(20, 20, "Exequiel Alvarado", {
+      fontSize: "18px",
+      fill: "#ffe66d",
+      fontFamily: "Arial",
+      fontStyle: "bold",
+      stroke: "#4ecdc4",
+      strokeThickness: 1,
+    })
+    creatorName.setOrigin(0, 0)
+
+    // Enhanced title with multiple effects - moved down for better spacing
+    const title = this.add.text(400, 120, "BUBBLE POP", {
+      fontSize: "72px",
       fill: "#4ecdc4",
       fontFamily: "Arial",
       fontStyle: "bold",
       stroke: "#ffffff",
-      strokeThickness: 8,
+      strokeThickness: 6,
     })
     title.setOrigin(0.5)
 
     // Add multiple glow effects to title
     this.tweens.add({
       targets: title,
-      scaleX: 1.08,
-      scaleY: 1.08,
+      scaleX: 1.06,
+      scaleY: 1.06,
       duration: 2500,
       ease: 'Sine.easeInOut',
       yoyo: true,
@@ -179,20 +190,9 @@ class MenuScene extends Phaser.Scene {
       loop: true
     })
 
-    // Creator name
-    const title2 = this.add.text(400, 50, "Exequiel Alvarado", {
-      fontSize: "32px",
-      fill: "#ffe66d",
-      fontFamily: "Arial",
-      fontStyle: "bold",
-      stroke: "#4ecdc4",
-      strokeThickness: 2,
-    })
-    title2.setOrigin(0.5)
-
-    // Enhanced subtitle with multiple effects
-    const subtitle = this.add.text(400, 240, "¡Explota burbujas del mismo color!", {
-      fontSize: "32px",
+    // Enhanced subtitle with multiple effects - moved down
+    const subtitle = this.add.text(400, 200, "¡Explota burbujas del mismo color!", {
+      fontSize: "28px",
       fill: "#ffe66d",
       fontFamily: "Arial",
       fontStyle: "bold",
@@ -203,17 +203,17 @@ class MenuScene extends Phaser.Scene {
     this.tweens.add({
       targets: subtitle,
       alpha: 0.8,
-      scaleX: 1.05,
-      scaleY: 1.05,
+      scaleX: 1.03,
+      scaleY: 1.03,
       duration: 2000,
       ease: 'Sine.easeInOut',
       yoyo: true,
       repeat: -1
     })
 
-    // Secondary subtitle
-    const subtitle2 = this.add.text(400, 280, "Platanus Hack 25 Arcade Challenge", {
-      fontSize: "20px",
+    // Secondary subtitle - moved down
+    const subtitle2 = this.add.text(400, 240, "Platanus Hack 25 Arcade Challenge", {
+      fontSize: "18px",
       fill: "#96ceb4",
       fontFamily: "Arial",
       fontStyle: "italic",
@@ -231,55 +231,55 @@ class MenuScene extends Phaser.Scene {
       delay: 1000
     })
 
-    // Enhanced instructions panel with better visual hierarchy
+    // Enhanced instructions panel with better visual hierarchy - moved down
     const instructionsBg = this.add.graphics()
     instructionsBg.fillStyle(0x000000, 0.8)
-    instructionsBg.fillRoundedRect(150, 320, 500, 140, 15)
+    instructionsBg.fillRoundedRect(150, 300, 500, 120, 15)
     instructionsBg.lineStyle(3, 0x4ecdc4, 1)
-    instructionsBg.strokeRoundedRect(150, 320, 500, 140, 15)
+    instructionsBg.strokeRoundedRect(150, 300, 500, 120, 15)
 
     const instructions = this.add.text(
       400,
-      340,
+      315,
       "🎯 OBJETIVO: Conecta 3+ burbujas del mismo color\n\n⚠️ ¡CUIDADO! Después de 1 minuto las burbujas caen automáticamente\n\n💎 ¡Elimina todas las burbujas para ganar!",
       {
-        fontSize: "16px",
+        fontSize: "15px",
         fill: "#ffffff",
         fontFamily: "Arial",
         fontStyle: "bold",
         align: "center",
-        lineSpacing: 8,
+        lineSpacing: 6,
       },
     )
     instructions.setOrigin(0.5)
 
-    // Enhanced controls panel
+    // Enhanced controls panel - made more compact
     const controlsBg = this.add.graphics()
     controlsBg.fillStyle(0x000000, 0.8)
-    controlsBg.fillRoundedRect(150, 470, 500, 100, 15)
+    controlsBg.fillRoundedRect(150, 430, 500, 80, 15)
     controlsBg.lineStyle(3, 0xff9ff3, 1)
-    controlsBg.strokeRoundedRect(150, 470, 500, 100, 15)
+    controlsBg.strokeRoundedRect(150, 430, 500, 80, 15)
 
     const controls = this.add.text(
       400,
-      485,
-      "🎮 CONTROLES:\n\n" +
-      "🎯 Jugador 1: A|D (mover) • Q|W|E|S (apuntar) • ESPACIO (disparar)\n" +
-      "🎯 Jugador 2: J|L (mover) • U|I|O|K (apuntar) • ENTER (disparar)",
+      445,
+      "🎮 CONTROLES:\n" +
+      "🎯 J1: A|D (mover) • Q|W|E|S (apuntar) • ESPACIO (disparar)\n" +
+      "🎯 J2: J|L (mover) • U|I|O|K (apuntar) • ENTER (disparar)",
       {
         fontSize: "14px",
         fill: "#ffe66d",
         fontFamily: "Arial",
         fontStyle: "bold",
         align: "center",
-        lineSpacing: 4,
+        lineSpacing: 2,
       },
     )
     controls.setOrigin(0.5)
 
-    // Enhanced player selection section
-    const playerText = this.add.text(400, 380, "🎯 SELECCIONA TU MODO DE JUEGO", {
-      fontSize: "28px",
+    // Enhanced player selection section - moved up to fit everything
+    const playerText = this.add.text(400, 520, "🎯 SELECCIONA TU MODO DE JUEGO", {
+      fontSize: "22px",
       fill: "#4ecdc4",
       fontFamily: "Arial",
       fontStyle: "bold",
@@ -299,16 +299,16 @@ class MenuScene extends Phaser.Scene {
       repeat: -1
     })
 
-    // 1 Player button with enhanced styling
-    const onePlayerButton = this.add.container(300, 440)
+    // 1 Player button with enhanced styling - moved up
+    const onePlayerButton = this.add.container(300, 550)
     const onePlayerBg = this.add.graphics()
     onePlayerBg.fillStyle(0x4ecdc4, 1)
-    onePlayerBg.fillRoundedRect(-80, -20, 160, 40, 8)
+    onePlayerBg.fillRoundedRect(-75, -18, 150, 36, 8)
     onePlayerBg.lineStyle(3, 0xffffff, 1)
-    onePlayerBg.strokeRoundedRect(-80, -20, 160, 40, 8)
+    onePlayerBg.strokeRoundedRect(-75, -18, 150, 36, 8)
 
     const onePlayerText = this.add.text(0, 0, "🏆 1 JUGADOR", {
-      fontSize: "22px",
+      fontSize: "18px",
       fill: "#1a1a2e",
       fontFamily: "Arial",
       fontStyle: "bold",
@@ -318,16 +318,16 @@ class MenuScene extends Phaser.Scene {
     onePlayerButton.add([onePlayerBg, onePlayerText])
     onePlayerButton.setInteractive({ useHandCursor: true })
 
-    // 2 Players button with enhanced styling
-    const twoPlayersButton = this.add.container(500, 440)
+    // 2 Players button with enhanced styling - moved up
+    const twoPlayersButton = this.add.container(500, 550)
     const twoPlayersBg = this.add.graphics()
     twoPlayersBg.fillStyle(0xff6b6b, 1)
-    twoPlayersBg.fillRoundedRect(-80, -20, 160, 40, 8)
+    twoPlayersBg.fillRoundedRect(-75, -18, 150, 36, 8)
     twoPlayersBg.lineStyle(3, 0xffffff, 1)
-    twoPlayersBg.strokeRoundedRect(-80, -20, 160, 40, 8)
+    twoPlayersBg.strokeRoundedRect(-75, -18, 150, 36, 8)
 
     const twoPlayersText = this.add.text(0, 0, "👥 2 JUGADORES", {
-      fontSize: "22px",
+      fontSize: "18px",
       fill: "#1a1a2e",
       fontFamily: "Arial",
       fontStyle: "bold",
