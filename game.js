@@ -1046,59 +1046,62 @@ class GameScene extends Phaser.Scene {
     // Initialize shotThisFrame flag
     this.shotThisFrame = false
 
-    // Controls using arcade mapping with aiming system and alternative controls
-    const setupArcadeControls = () => {
-      // Helper function to check if any key in the mapping is pressed
-      const isKeyPressed = (keyArray) => {
-        return keyArray.some(key => this.input.keyboard.checkDown(this.input.keyboard.addKey(key)))
-      }
+    // Initialize keyboard keys at the beginning of create()
+    this.keys = this.input.keyboard.addKeys('A,D,Q,E,W,S,SPACE,J,L,U,O,I,K,ENTER,ONE,TWO')
 
+    // Enable keyboard input globally
+    this.input.keyboard.enabled = true
+
+    // Controls using arcade mapping with aiming system and alternative controls
+    this.updateControls = () => {
       // Player 1 controls (A/D/Q/E/W/S/Space) - always available
       if (this.shooters[0]) {
         const shooter1 = this.shooters[0]
         const bubble1 = this.currentBubbles[0]
 
-        if (this.input.keyboard.checkDown(this.input.keyboard.addKey('KeyA'))) {
+        if (this.keys.A.isDown) {
           if (shooter1.x > 50) {
-            shooter1.x -= 20
+            shooter1.x -= 10
             if (bubble1) bubble1.x = shooter1.x
+            this.drawShooter(shooter1)
             this.updateAimPreview()
           }
         }
 
-        if (this.input.keyboard.checkDown(this.input.keyboard.addKey('KeyD'))) {
+        if (this.keys.D.isDown) {
           if (shooter1.x < 750) {
-            shooter1.x += 20
+            shooter1.x += 10
             if (bubble1) bubble1.x = shooter1.x
+            this.drawShooter(shooter1)
             this.updateAimPreview()
           }
         }
 
-        if (this.input.keyboard.checkDown(this.input.keyboard.addKey('KeyQ'))) {
+        if (this.keys.Q.isDown) {
           if (bubble1 && !bubble1.launched) {
             this.adjustAim(-5, 0)
           }
         }
 
-        if (this.input.keyboard.checkDown(this.input.keyboard.addKey('KeyE'))) {
+        if (this.keys.E.isDown) {
           if (bubble1 && !bubble1.launched) {
             this.adjustAim(5, 0)
           }
         }
 
-        if (this.input.keyboard.checkDown(this.input.keyboard.addKey('KeyW'))) {
+        if (this.keys.W.isDown) {
           if (bubble1 && !bubble1.launched) {
             this.adjustAimVertical(-5, 0)
           }
         }
 
-        if (this.input.keyboard.checkDown(this.input.keyboard.addKey('KeyS'))) {
+        if (this.keys.S.isDown) {
           if (bubble1 && !bubble1.launched) {
             this.adjustAimVertical(5, 0)
           }
         }
 
-        if (this.input.keyboard.checkDown(this.input.keyboard.addKey('Space'))) {
+        if (this.keys.SPACE.isDown) {
           if (bubble1 && !bubble1.launched && !this.shotThisFrame) {
             this.shootBubble(0)
             this.shotThisFrame = true
@@ -1111,47 +1114,49 @@ class GameScene extends Phaser.Scene {
         const shooter2 = this.shooters[1]
         const bubble2 = this.currentBubbles[1]
 
-        if (this.input.keyboard.checkDown(this.input.keyboard.addKey('KeyJ'))) {
+        if (this.keys.J.isDown) {
           if (shooter2.x > 50) {
-            shooter2.x -= 20
+            shooter2.x -= 10
             if (bubble2) bubble2.x = shooter2.x
+            this.drawShooter(shooter2)
             this.updateAimPreview()
           }
         }
 
-        if (this.input.keyboard.checkDown(this.input.keyboard.addKey('KeyL'))) {
+        if (this.keys.L.isDown) {
           if (shooter2.x < 750) {
-            shooter2.x += 20
+            shooter2.x += 10
             if (bubble2) bubble2.x = shooter2.x
+            this.drawShooter(shooter2)
             this.updateAimPreview()
           }
         }
 
-        if (this.input.keyboard.checkDown(this.input.keyboard.addKey('KeyU'))) {
+        if (this.keys.U.isDown) {
           if (bubble2 && !bubble2.launched) {
             this.adjustAim(-5, 1)
           }
         }
 
-        if (this.input.keyboard.checkDown(this.input.keyboard.addKey('KeyO'))) {
+        if (this.keys.O.isDown) {
           if (bubble2 && !bubble2.launched) {
             this.adjustAim(5, 1)
           }
         }
 
-        if (this.input.keyboard.checkDown(this.input.keyboard.addKey('KeyI'))) {
+        if (this.keys.I.isDown) {
           if (bubble2 && !bubble2.launched) {
             this.adjustAimVertical(-5, 1)
           }
         }
 
-        if (this.input.keyboard.checkDown(this.input.keyboard.addKey('KeyK'))) {
+        if (this.keys.K.isDown) {
           if (bubble2 && !bubble2.launched) {
             this.adjustAimVertical(5, 1)
           }
         }
 
-        if (this.input.keyboard.checkDown(this.input.keyboard.addKey('Enter'))) {
+        if (this.keys.ENTER.isDown) {
           if (bubble2 && !bubble2.launched && !this.shotThisFrame) {
             this.shootBubble(1)
             this.shotThisFrame = true
@@ -1160,25 +1165,10 @@ class GameScene extends Phaser.Scene {
       }
 
       // Reset shot flag
-      if (!this.input.keyboard.checkDown(this.input.keyboard.addKey('Space')) &&
-          !this.input.keyboard.checkDown(this.input.keyboard.addKey('Enter'))) {
-        this.shotThisFrame = false
-      }
-
-      // Reset shot flag if no shoot keys are pressed
-      if (!isKeyPressed(ALTERNATIVE_CONTROLS.P1_SHOOT) && !isKeyPressed(ALTERNATIVE_CONTROLS.P2_SHOOT)) {
+      if (!this.keys.SPACE.isDown && !this.keys.ENTER.isDown) {
         this.shotThisFrame = false
       }
     }
-
-    // Initialize keyboard keys at the beginning of create()
-    this.input.keyboard.addKeys('A,D,Q,E,W,S,SPACE,J,L,U,O,I,K,ENTER,ONE,TWO')
-
-    // Enable keyboard input globally
-    this.input.keyboard.enabled = true
-
-    // Update controls in update loop
-    this.updateControls = setupArcadeControls
   }
 
   update(time, delta) {
@@ -1219,7 +1209,7 @@ class GameScene extends Phaser.Scene {
     }
 
     // Update controls
-    if (this.updateControls) this.updateControls()
+    this.updateControls()
 
     // Debug: Show pressed keys and cannon positions
     const pressedKeys = []
