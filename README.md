@@ -2,6 +2,8 @@
 
 Un juego arcade para Platanus Hack 25 donde los jugadores disparan burbujas para conectar 3+ del mismo color y hacerlas explotar. ¡Elimina todas las burbujas para ganar!
 
+![Bubble Pop](cover.png)
+
 🎯 Descripción
 Modo de 1 o 2 jugadores simultáneos
 Sistema de capas que caen cada 60 segundos
@@ -78,11 +80,16 @@ Creado por: Exequiel Alvarado
 
 ---
 
-## 🏆 Prize
+## 🏆 Prizes
 
-- 🎯 **Your game will be playing non-stop in the hackathon arcade**
-- 💵 **$100 USD in cash**
+### 🥇 First Place:
+- 💵 **$250 USD in cash**
 - 🎟️ **A slot to participate in Platanus Hack**
+- 🎮 **Your game featured on the arcade machine**
+
+### 🥈 Second Place:
+- 💵 **$100 USD in cash**
+- 🎮 **Your game featured on the arcade machine**
 
 ---
 
@@ -107,9 +114,34 @@ Your game must comply with these technical restrictions:
 - ✅ **Generated audio tones** - Using Phaser's Web Audio API
 - ✅ **Canvas-based rendering and effects**
 
-### Controls
-- 🕹️ Keep controls simple - they will be mapped to an arcade controller
-- 🎮 Recommended: Arrow keys, WASD, spacebar, or simple mouse clicks
+🕹️ Controls
+Your game will run on a real arcade cabinet with physical joysticks and buttons!
+
+**Arcade Button Layout**
+
+**Arcade Button Mapping**
+The arcade cabinet sends specific key codes when buttons are pressed:
+
+**Player 1:**
+- Joystick: P1U, P1D, P1L, P1R (Up, Down, Left, Right)
+- Joystick Diagonals: P1DL, P1DR (Down-Left, Down-Right)
+- Action Buttons: P1A, P1B, P1C (top row) / P1X, P1Y, P1Z (bottom row)
+- Start: START1
+
+**Player 2:**
+- Joystick: P2U, P2D, P2L, P2R
+- Joystick Diagonals: P2DL, P2DR
+- Action Buttons: P2A, P2B, P2C / P2X, P2Y, P2Z
+- Start: START2
+
+**Testing Locally**
+For local testing, you can map these arcade buttons to keyboard keys. The mapping supports multiple keyboard keys per arcade button (useful for alternatives like WASD + Arrow Keys). See game.js for the complete ARCADE_CONTROLS mapping template.
+
+By default:
+- Player 1 uses WASD (joystick) and U/I/O/J/K/L (action buttons)
+- Player 2 uses Arrow Keys (joystick) and R/T/Y/F/G/H (action buttons)
+
+💡 **Tip:** Keep controls simple - design for joystick + 1-2 action buttons for the best arcade experience!
 
 ---
 
