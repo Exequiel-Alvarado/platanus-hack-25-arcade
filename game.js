@@ -283,7 +283,7 @@ class MenuScene extends Phaser.Scene {
     // Enhanced player selection section - moved up to fit everything
     const playerText = this.add.text(400, 520, "🎯 SELECCIONA TU MODO DE JUEGO", {
       fontSize: "22px",
-      fill: "#c8ff00ff",
+      fill: "#c5f714ff",
       fontFamily: "Arial",
       fontStyle: "bold",
       stroke: "#030000ff",
